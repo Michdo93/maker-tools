@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Passwort-Generator – MakerTools</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-brand" href="../index.html">🔧 MAKER<em>TOOLS</em></a>
+  <a href="../index.html">Start</a>
+  <a href="widerstand.html">🎨 Widerstand</a>
+  <a href="hash.html">#️⃣ Hash</a>
+  <a href="passwort.html" class="active">🔑 Passwort</a>
+</nav>
+<div class="container">
+  <h1 class="page-title">🔑 Passwort-<em>Generator</em></h1>
+  <p class="page-sub">Sichere Passwörter lokal im Browser generieren – nichts wird übertragen</p>
+
+  <div class="card">
+    <div class="card-title">Konfiguration</div>
+    <div class="field">
+      <label>Länge: <span id="len-label">16</span> Zeichen</label>
+      <input type="range" id="pw-len" min="8" max="128" value="16" oninput="document.getElementById('len-label').textContent=this.value;generate()">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;cursor:pointer">
+        <input type="checkbox" id="opt-upper" checked onchange="generate()"> Großbuchstaben (A–Z)
+      </label>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;cursor:pointer">
+        <input type="checkbox" id="opt-lower" checked onchange="generate()"> Kleinbuchstaben (a–z)
+      </label>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;cursor:pointer">
+        <input type="checkbox" id="opt-digits" checked onchange="generate()"> Zahlen (0–9)
+      </label>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;cursor:pointer">
+        <input type="checkbox" id="opt-special" checked onchange="generate()"> Sonderzeichen (!@#…)
+      </label>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;cursor:pointer">
+        <input type="checkbox" id="opt-noambig" onchange="generate()"> Ähnliche Zeichen ausschließen (0Ol1I)
+      </label>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;cursor:pointer">
+        <input type="checkbox" id="opt-pronounce" onchange="generate()"> Aussprechbar (nur Buchstaben+Zahlen)
+      </label>
+    </div>
+
+    <div style="background:var(--bg);border:2px solid var(--border);border-radius:9px;padding:1rem 1.25rem;margin-bottom:.85rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem">
+      <div id="pw-out" style="font-family:var(--mono);font-size:1.05rem;word-break:break-all;flex:1;letter-spacing:.05em"></div>
+      <button class="btn btn-sm" onclick="copyPW()" style="flex-shrink:0">Kopieren</button>
+    </div>
+
+    <div style="margin-bottom:1rem">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">STÄRKE</div>
+      <div style="background:var(--surf2);border-radius:100px;height:8px;overflow:hidden">
+        <div id="strength-bar" style="height:100%;border-radius:100px;transition:width .3s,background .3s"></div>
+      </div>
+      <div id="strength-label" style="font-size:.75rem;margin-top:.25rem"></div>
+    </div>
+
+    <div class="btns">
+      <button class="btn" onclick="generate()">🔄 Neu generieren</button>
+      <button class="btn btn-outline" onclick="generateBatch()">5× generieren</button>
+    </div>
+  </div>
+
+  <div class="card" id="batch-card" style="display:none">
+    <div class="card-title">5 Passwörter</div>
+    <div id="batch-out"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Passphrase (Diceware-Stil)</div>
+    <div class="field"><label>Anzahl Wörter</label>
+      <input type="range" id="pp-words" min="3" max="8" value="4" oninput="document.getElementById('pp-label').textContent=this.value;genPhrase()">
+      <span id="pp-label" style="font-size:.78rem;color:var(--muted)">4 Wörter</span>
+    </div>
+    <div style="background:var(--bg);border:2px solid var(--border);border-radius:9px;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.65rem">
+      <div id="pp-out" style="font-family:var(--mono);font-size:.95rem;flex:1"></div>
+      <button class="btn btn-sm btn-outline" onclick="navigator.clipboard.writeText(document.getElementById('pp-out').textContent)">Kopieren</button>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="genPhrase()">🔄 Neue Passphrase</button>
+  </div>
+</div>
+
+<script src="../js/nav.js"></script>
+<script>
+const UPPER='ABCDEFGHIJKLMNOPQRSTUVWXYZ', LOWER='abcdefghijklmnopqrstuvwxyz';
+const DIGITS='0123456789', SPECIAL='!@#$%^&*()-_=+[]{}|;:,.<>?';
+const AMBIG='0Ol1I';
+const WORDS=['Apfel','Berg','Mond','Fluss','Wind','Stern','Wald','Meer','Tag','Nacht','Licht','Feuer',
+  'Regen','Schnee','Stein','Blume','Vogel','Fisch','Tiger','Adler','Garten','Schloss','Turm','Brücke',
+  'Nebel','Donner','Sonne','Wolke','Blitz','Sturm','Wiese','Bach','Katze','Hund','Pferd','Fuchs'];
+
+function getCharset() {
+  let cs='';
+  if(document.getElementById('opt-upper').checked) cs+=UPPER;
+  if(document.getElementById('opt-lower').checked) cs+=LOWER;
+  if(document.getElementById('opt-digits').checked) cs+=DIGITS;
+  if(document.getElementById('opt-special').checked&&!document.getElementById('opt-pronounce').checked) cs+=SPECIAL;
+  if(document.getElementById('opt-noambig').checked) cs=cs.split('').filter(c=>!AMBIG.includes(c)).join('');
+  if(document.getElementById('opt-pronounce').checked) cs=(UPPER+LOWER+DIGITS).split('').filter(c=>!AMBIG.includes(c)).join('');
+  return cs || LOWER;
+}
+
+function secureRandom(max) {
+  const arr=new Uint32Array(1); crypto.getRandomValues(arr); return arr[0]%max;
+}
+
+function genPassword() {
+  const len=+document.getElementById('pw-len').value;
+  const cs=getCharset();
+  return Array.from({length:len},()=>cs[secureRandom(cs.length)]).join('');
+}
+
+function calcStrength(pw) {
+  let score=0;
+  if(pw.length>=12) score++;
+  if(pw.length>=16) score++;
+  if(pw.length>=20) score++;
+  if(/[A-Z]/.test(pw)) score++;
+  if(/[a-z]/.test(pw)) score++;
+  if(/[0-9]/.test(pw)) score++;
+  if(/[^A-Za-z0-9]/.test(pw)) score++;
+  return Math.min(score,5);
+}
+
+function generate() {
+  const pw=genPassword();
+  document.getElementById('pw-out').textContent=pw;
+  const s=calcStrength(pw);
+  const cols=['#ef4444','#f97316','#eab308','#84cc16','#22c55e'];
+  const labs=['Sehr schwach','Schwach','Mittel','Stark','Sehr stark'];
+  document.getElementById('strength-bar').style.cssText=`width:${s/5*100}%;background:${cols[s-1]||cols[0]}`;
+  document.getElementById('strength-label').innerHTML=`<span style="color:${cols[s-1]||cols[0]}">${labs[s-1]||labs[0]}</span>`;
+}
+
+function copyPW() { navigator.clipboard.writeText(document.getElementById('pw-out').textContent).catch(()=>{}); }
+
+function generateBatch() {
+  const pws=Array.from({length:5},()=>genPassword());
+  document.getElementById('batch-card').style.display='block';
+  document.getElementById('batch-out').innerHTML=pws.map(pw=>
+    `<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:.85rem;flex:1">${pw}</div>
+      <button class="btn btn-sm btn-outline" onclick="navigator.clipboard.writeText('${pw.replace(/'/g,"\\'")}')">Kopieren</button>
+    </div>`
+  ).join('');
+}
+
+function genPhrase() {
+  const n=+document.getElementById('pp-words').value;
+  const phrase=Array.from({length:n},()=>WORDS[secureRandom(WORDS.length)]).join('-');
+  document.getElementById('pp-out').textContent=phrase;
+}
+
+generate();
+genPhrase();
+</script>
+</body></html>

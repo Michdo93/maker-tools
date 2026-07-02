@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Widerstand-Farbcode – MakerTools</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+.resistor{display:flex;align-items:center;justify-content:center;margin:1.25rem 0;gap:0}
+.res-body{background:linear-gradient(90deg,#c8a165,#d4b07a,#c8a165);border-radius:6px;height:28px;display:flex;align-items:center;padding:0 8px;gap:5px;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.res-lead{background:#b0b0b0;height:3px;width:40px}
+.ring{width:12px;height:28px;border-radius:2px;flex-shrink:0}
+.ring.gap{width:8px;background:transparent!important}
+.color-btn{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
+.color-btn:hover{transform:scale(1.2)}
+.color-btn.selected{border-color:var(--white);transform:scale(1.15)}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-brand" href="../index.html">🔧 MAKER<em>TOOLS</em></a>
+  <a href="../index.html">Start</a>
+  <a href="widerstand.html" class="active">🎨 Widerstand</a>
+  <a href="hash.html">#️⃣ Hash</a>
+  <a href="passwort.html">🔑 Passwort</a>
+</nav>
+<div class="container">
+  <h1 class="page-title">🎨 Widerstand-<em>Farbcode</em></h1>
+  <p class="page-sub">Farbring-Rechner für 4- und 5-Ring-Widerstände + Wert → Farbcode</p>
+
+  <div class="card">
+    <div class="card-title">Anzahl Ringe</div>
+    <div class="tabs" style="margin-bottom:1rem">
+      <button class="tab active" onclick="setMode(4)">4 Ringe</button>
+      <button class="tab" onclick="setMode(5)">5 Ringe</button>
+    </div>
+
+    <!-- Widerstand-Visualisierung -->
+    <div class="resistor">
+      <div class="res-lead"></div>
+      <div class="res-body" id="res-body"></div>
+      <div class="res-lead"></div>
+    </div>
+
+    <!-- Ring-Auswahl -->
+    <div id="ring-selectors"></div>
+
+    <div class="result-box" style="text-align:center;margin-top:1rem">
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:.3rem">WIDERSTANDSWERT</div>
+      <div class="result-big" id="res-value">–</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:.25rem" id="res-tolerance"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Wert → Farbcode</div>
+    <div style="display:flex;gap:.65rem;align-items:flex-end">
+      <div class="field" style="flex:1;margin-bottom:0"><label>Widerstandswert (Ω)</label><input type="number" id="val-input" placeholder="4700"></div>
+      <button class="btn" onclick="valToColor()">Farbcode →</button>
+    </div>
+    <div id="val-result" style="margin-top:.85rem;display:none">
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem">Farbcode (4 Ringe):</div>
+      <div id="val-rings" style="display:flex;gap:.5rem;align-items:center"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 E12-Reihe (häufige Werte)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.35rem">
+      <span class="badge badge-yellow">10Ω</span><span class="badge badge-yellow">12Ω</span><span class="badge badge-yellow">15Ω</span>
+      <span class="badge badge-yellow">18Ω</span><span class="badge badge-yellow">22Ω</span><span class="badge badge-yellow">27Ω</span>
+      <span class="badge badge-yellow">33Ω</span><span class="badge badge-yellow">39Ω</span><span class="badge badge-yellow">47Ω</span>
+      <span class="badge badge-yellow">56Ω</span><span class="badge badge-yellow">68Ω</span><span class="badge badge-yellow">82Ω</span>
+      <span class="badge badge-yellow">100Ω</span><span class="badge badge-yellow">120Ω</span><span class="badge badge-yellow">150Ω</span>
+      <span class="badge badge-yellow">220Ω</span><span class="badge badge-yellow">330Ω</span><span class="badge badge-yellow">470Ω</span>
+      <span class="badge badge-yellow">1kΩ</span><span class="badge badge-yellow">2.2kΩ</span><span class="badge badge-yellow">4.7kΩ</span>
+      <span class="badge badge-yellow">10kΩ</span><span class="badge badge-yellow">22kΩ</span><span class="badge badge-yellow">47kΩ</span>
+      <span class="badge badge-yellow">100kΩ</span><span class="badge badge-yellow">1MΩ</span>
+    </div>
+  </div>
+</div>
+
+<script src="../js/nav.js"></script>
+<script>
+const COLORS = [
+  {name:'Schwarz', hex:'#1a1a1a', digit:0, mult:1,      tol:null},
+  {name:'Braun',   hex:'#8B4513', digit:1, mult:10,     tol:1},
+  {name:'Rot',     hex:'#dc2626', digit:2, mult:100,    tol:2},
+  {name:'Orange',  hex:'#ea580c', digit:3, mult:1000,   tol:null},
+  {name:'Gelb',    hex:'#ca8a04', digit:4, mult:10000,  tol:null},
+  {name:'Grün',    hex:'#16a34a', digit:5, mult:100000, tol:0.5},
+  {name:'Blau',    hex:'#2563eb', digit:6, mult:1e6,    tol:0.25},
+  {name:'Violett', hex:'#7c3aed', digit:7, mult:1e7,    tol:0.1},
+  {name:'Grau',    hex:'#6b7280', digit:8, mult:1e8,    tol:0.05},
+  {name:'Weiß',    hex:'#e5e7eb', digit:9, mult:1e9,    tol:null},
+  {name:'Gold',    hex:'#d97706', digit:null, mult:0.1, tol:5},
+  {name:'Silber',  hex:'#9ca3af', digit:null, mult:0.01,tol:10},
+];
+
+let mode = 4;
+let selected = [1, 0, 0, 10]; // indices into COLORS
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===(m===4?0:1)));
+  selected = m===4 ? [1,0,0,10] : [1,0,0,0,10];
+  buildSelectors();
+  calcValue();
+}
+
+function buildSelectors() {
+  const LABELS4 = ['Ring 1 (Ziffer)','Ring 2 (Ziffer)','Multiplikator','Toleranz'];
+  const LABELS5 = ['Ring 1 (Ziffer)','Ring 2 (Ziffer)','Ring 3 (Ziffer)','Multiplikator','Toleranz'];
+  const labels = mode===4 ? LABELS4 : LABELS5;
+  const isTol = i => i === selected.length-1;
+  const isMult = i => i === selected.length-2;
+
+  document.getElementById('ring-selectors').innerHTML = selected.map((sel,ri) => {
+    const validColors = COLORS.filter(c => {
+      if(isTol(ri)) return c.tol !== null;
+      if(isMult(ri)) return c.mult !== undefined;
+      return c.digit !== null;
+    });
+    return `<div style="margin-bottom:.9rem">
+      <div style="font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">${labels[ri]}</div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        ${validColors.map(c => {
+          const idx = COLORS.indexOf(c);
+          return `<button class="color-btn${idx===sel?' selected':''}" style="background:${c.hex}" title="${c.name}" onclick="selectColor(${ri},${idx})"></button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  updateResistor();
+}
+
+function selectColor(ring, colorIdx) {
+  selected[ring] = colorIdx;
+  buildSelectors();
+  calcValue();
+}
+
+function updateResistor() {
+  const body = document.getElementById('res-body');
+  const rings = selected.map((ci,i) => {
+    const gap = (mode===5 && i===3) ? '<div class="ring gap"></div>' : '';
+    return `${gap}<div class="ring" style="background:${COLORS[ci].hex}" title="${COLORS[ci].name}"></div>`;
+  }).join('');
+  body.innerHTML = rings;
+}
+
+function fmtOhm(v) {
+  if(v>=1e6) return (v/1e6).toFixed(v%1e6?2:0)+' MΩ';
+  if(v>=1e3) return (v/1e3).toFixed(v%1e3?2:0)+' kΩ';
+  return v+' Ω';
+}
+
+function calcValue() {
+  let digits = '';
+  const last = selected.length-1, mult_i = last-1;
+  for(let i=0;i<mult_i;i++) digits += COLORS[selected[i]].digit;
+  const multColor = COLORS[selected[mult_i]];
+  const tolColor  = COLORS[selected[last]];
+  const val = parseInt(digits) * multColor.mult;
+  document.getElementById('res-value').textContent = fmtOhm(val);
+  document.getElementById('res-tolerance').textContent = tolColor.tol != null ? `± ${tolColor.tol} %` : '';
+}
+
+function valToColor() {
+  const v = parseFloat(document.getElementById('val-input').value);
+  if(isNaN(v)||v<=0) return;
+  // Find 4-band encoding
+  const mults = COLORS.filter(c=>c.mult!==undefined&&c.mult>=0.01);
+  let best=null, bestDiff=Infinity;
+  for(const m of mults) {
+    const raw = v/m.mult;
+    const d1=Math.floor(raw/10)%10, d2=Math.floor(raw)%10;
+    const reconstructed = (d1*10+d2)*m.mult;
+    if(Math.abs(reconstructed-v)<bestDiff) { bestDiff=Math.abs(reconstructed-v); best={m,d1,d2}; }
+  }
+  if(!best) return;
+  const rings = [
+    COLORS.find(c=>c.digit===best.d1),
+    COLORS.find(c=>c.digit===best.d2),
+    best.m,
+    COLORS.find(c=>c.name==='Gold')
+  ];
+  document.getElementById('val-rings').innerHTML = rings.map(c=>c?
+    `<div style="display:flex;flex-direction:column;align-items:center;gap:.25rem">
+       <div style="width:24px;height:40px;border-radius:3px;background:${c.hex};border:1px solid rgba(255,255,255,.1)"></div>
+       <div style="font-size:.65rem;color:var(--muted)">${c.name}</div>
+     </div>`:'').join('<div style="color:var(--muted);padding:0 .2rem">·</div>');
+  document.getElementById('val-result').style.display='block';
+}
+
+setMode(4);
+</script>
+</body></html>

@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --bg:     #0e0e10;
+  --bg2:    #161618;
+  --surf:   #1c1c1f;
+  --surf2:  #252528;
+  --yellow: #eab308;
+  --yel2:   #ca8a04;
+  --yel-g:  rgba(234,179,8,0.08);
+  --green:  #22c55e;
+  --red:    #ef4444;
+  --blue:   #3b82f6;
+  --white:  #f0ede8;
+  --muted:  #55555e;
+  --border: rgba(234,179,8,0.12);
+  --radius: 10px;
+  --mono:   'JetBrains Mono', monospace;
+  --t:      0.18s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:'Inter',sans-serif;font-size:15px;line-height:1.65;min-height:100vh}
+
+.topnav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;overflow-x:auto;position:sticky;top:0;z-index:100}
+.topnav-brand{font-family:'Outfit',sans-serif;font-weight:800;font-size:1rem;color:var(--white);text-decoration:none;padding:.85rem 0;margin-right:1.5rem;white-space:nowrap;flex-shrink:0}
+.topnav-brand em{font-style:normal;color:var(--yellow)}
+.topnav a:not(.topnav-brand){color:var(--muted);text-decoration:none;padding:.85rem .9rem;font-size:.83rem;font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;transition:all var(--t)}
+.topnav a:not(.topnav-brand):hover{color:var(--white)}
+.topnav a.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+
+.container{max-width:900px;margin:0 auto;padding:2rem 1.25rem}
+.page-title{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:.3rem}
+.page-title em{font-style:normal;color:var(--yellow)}
+.page-sub{color:var(--muted);font-size:.86rem;margin-bottom:1.75rem}
+
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:1.35rem;margin-bottom:1.1rem}
+.card-title{font-family:'Outfit',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:1rem}
+
+.field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.85rem}
+.field label{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+input[type=text],input[type=number],input[type=range],select{background:var(--bg2);border:1.5px solid rgba(234,179,8,.15);border-radius:7px;color:var(--white);font-family:'Inter',sans-serif;font-size:.9rem;padding:.55rem .85rem;width:100%;transition:border-color var(--t)}
+input:focus,select:focus{outline:none;border-color:var(--yellow)}
+input[type=range]{padding:.4rem 0;cursor:pointer;accent-color:var(--yellow)}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--yellow);cursor:pointer}
+
+.btn{background:var(--yellow);color:#0e0e10;border:none;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;font-size:.88rem;font-weight:700;padding:.58rem 1.2rem;transition:background var(--t),transform var(--t)}
+.btn:hover{background:var(--yel2)}
+.btn:active{transform:scale(.97)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted)}
+.btn-outline:hover{border-color:var(--yellow);color:var(--yellow);background:var(--yel-g)}
+.btn-sm{padding:.35rem .85rem;font-size:.78rem}
+.btns{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.2rem}
+
+.result-box{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.9rem 1.1rem;margin-top:.85rem}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:.28rem 0;border-bottom:1px solid rgba(234,179,8,.05);font-size:.87rem}
+.result-row:last-child{border-bottom:none}
+.result-row .label{color:var(--muted)}
+.result-row .value{font-family:var(--mono);font-size:.82rem}
+.result-big{font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:var(--yellow)}
+.output{background:var(--bg);border:1.5px solid var(--border);border-radius:7px;padding:.75rem 1rem;font-family:var(--mono);font-size:.85rem;word-break:break-all;color:var(--white);min-height:50px}
+
+.badge{display:inline-block;padding:.12rem .5rem;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-yellow{background:var(--yel-g);color:var(--yellow)}
+
+hr.div{border:none;border-top:1px solid var(--border);margin:1.1rem 0}
+
+@media(max-width:600px){.container{padding:1.25rem .9rem}}
